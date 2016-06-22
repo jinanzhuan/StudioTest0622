@@ -76,7 +76,7 @@ public class GuideActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         handler.removeCallbacksAndMessages(null);
+
     }
 }

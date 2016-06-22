@@ -82,8 +82,6 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
             return false;
         }
     };
-    private List<ImageBean> localImageList;
-    private List<ImageBean> downloadImageList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,7 +137,6 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
             case R.id.item_menu_history:
                 showHistory();
 
-
                 break;
             case R.id.item_menu_local:
                 showLocalImages();
@@ -163,14 +160,8 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
 
         imageBeanList = getLocalImages();
 
-        //进行一系列初始化
-        selectCount = 0;
-        isEdit = false;
-        tv_web_url.setText("在下载文件夹中共有" + imageBeanList.size() + "张图片");
-        iv_picture_load.setImageResource(R.drawable.op_del_press);//将图片进行更换
-        iv_picture_load.setVisibility(View.GONE);
-        cb_picture_ischecked.setVisibility(View.GONE);
-
+        //根据是本地以及联网状态进行初始化
+        initState();
 
         adapter.setList(imageBeanList);
         adapter.notifyDataSetChanged();
@@ -240,6 +231,16 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
         Intent intent = getIntent();
         url = intent.getStringExtra("url");
 
+       /* //针对不同的情况，进行不同的处理
+        Constants.state = intent.getIntExtra("state", 1);
+        if(Constants.state==Constants.S_WEB){
+            showHistory();
+        }else if(Constants.state==Constants.S_LOCAL){
+            showLocalImages();
+        }*/
+
+        Log.e("TAG", "url" + url);
+
         //对url进行检查，是否符合规范
         url = checkUrlPre(url);
 
@@ -260,17 +261,14 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
      * @param url
      */
     private void getHttpImages(final String url) {
+        //将状态保存为联网状态
+        Constants.state = Constants.S_WEB;
 
         //添加到数据库，并进行过滤
         addToHistory(url);
 
-
-        //使用searchview查询其他网址是，需要做以下初始化
-        isEdit = false;
-        selectCount = 0;
-        tv_web_url.setText("请在搜索框中输入网站网址");
-        cb_picture_ischecked.setVisibility(View.GONE);
-        iv_picture_load.setVisibility(View.GONE);
+        //使用searchview查询其他网址时，需要先初始化
+        initState();
         this.url = url;
 
         //显示一个progressdialog
@@ -309,6 +307,27 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
         });
 
 
+    }
+
+    /*
+    根据是本地状态以及联网状态，进行不同的初始化，将activity的状态为非编辑状态
+     */
+    private void initState() {
+        if (Constants.state == Constants.S_WEB) {
+            Log.e("TAG", "Constants.S_WEB");
+            tv_web_url.setText("请在搜索框中输入网站网址");
+            iv_picture_load.setImageResource(R.drawable.icon_s_download_press);//将图片进行更换
+        }
+        if (Constants.state == Constants.S_LOCAL) {
+            Log.e("TAG", "Constants.S_LOCAL");
+            tv_web_url.setText("在下载文件夹中共有" + imageBeanList.size() + "张图片");
+            iv_picture_load.setImageResource(R.drawable.op_del_press);//将图片进行更换
+        }
+        isEdit = false;
+        selectCount = 0;
+        cb_picture_ischecked.setChecked(false);
+        cb_picture_ischecked.setVisibility(View.GONE);
+        iv_picture_load.setVisibility(View.GONE);
     }
 
     private void addToHistory(String url) {
@@ -460,6 +479,7 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
             String src = img.attr("src");
             if (src.toLowerCase().endsWith("jpg") || src.toLowerCase().endsWith("png")) {
                 src = checkSrc(url, src);
+                Log.i("TAG", "parseHtml---"+src);
                 ImageBean imageBean = new ImageBean(src);
                 //过滤包含相同的url
                 if (!imageBeanSet.contains(imageBean) && src.indexOf("/../") == -1) {
@@ -510,6 +530,7 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
      */
     private String checkUrlPre(String url) {
         if (!url.startsWith("http")) {
+            Log.i("TAG", "checkUrlPre---"+url);
             url = "http://" + url;
             return url;
         }
@@ -537,7 +558,6 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
 
         if (!isEdit) {//如果在查看状态，则进行以下操作(改变为编辑状态）
             isEdit = true;
-            Constants.state=Constants.S_WEB;
             cb_picture_ischecked.setVisibility(View.VISIBLE);
             iv_picture_load.setVisibility(View.VISIBLE);
         }
@@ -589,22 +609,23 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
      */
     public void checkimages(View v) {
         if (cb_picture_ischecked.isChecked()) {
-            for (int i = 0; i < imageBeanList.size(); i++) {
-                adapter.checkImage(i, true);
-            }
-            adapter.notifyDataSetChanged();
+            setAllImagesState(true);
             selectCount = imageBeanList.size();
             tv_web_url.setText(selectCount + "/" + imageBeanList.size());
         } else {
-            for (int i = 0; i < imageBeanList.size(); i++) {
-                adapter.checkImage(i, false);
-            }
-            adapter.notifyDataSetChanged();
+            setAllImagesState(false);
             selectCount = 0;
             tv_web_url.setText(selectCount + "/" + imageBeanList.size());
 
         }
 
+    }
+
+    private void setAllImagesState(boolean check) {
+        for (int i = 0; i < imageBeanList.size(); i++) {
+            adapter.checkImage(i, check);
+        }
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -617,58 +638,69 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
         为下载图标设置监听
          */
     public void download(View v) {
-        if(Constants.state==Constants.S_WEB){
-            showProgressDialog("正在批量下载图片",true);
-            dialog.setTitle("开始批量下载");
+        if (Constants.state == Constants.S_WEB) {
+            Log.e("TAG", "download+Constants.S_WEB");
+            showProgressDialog("正在批量下载图片", true);
+            dialog.setTitle("正在下载。。。");
             dialog.setMax(selectCount);
             downloadImageToLocal();
+            initState();
+        } else if (Constants.state == Constants.S_LOCAL) {
+            Log.e("TAG", "download+Constants.S_LOCAL");
+            deleteImageFromLocal();
+            Toast.makeText(WebPictureActivity.this, "所有图片删除完毕", Toast.LENGTH_SHORT).show();
+            initState();
         }
-        if(Constants.state==Constants.S_LOCAL){
-           deleteImageFromLocal();
+        setAllImagesState(false);//包含跟新adapter
 
-
-        }
 
     }
 
+    /*
+    删除选中的本地图片
+     */
     private void deleteImageFromLocal() {
-        
-        for(int i = 0; i < imageBeanList.size(); i++) {
-            if(imageBeanList.get(i).ischecked()){
-                File file=new File(imageBeanList.get(i).getUrl());
-                if(file.exists()){
+
+        for (int i = 0; i < imageBeanList.size(); i++) {
+            if (imageBeanList.get(i).ischecked()) {
+                File file = new File(imageBeanList.get(i).getUrl());
+                if (file.exists()) {
                     file.delete();
                 }
                 imageBeanList.remove(i);
-
+                i--;//当把集合中某项删除时，后一项会自动挪到此位置，为了遍历到所有的项，需要加此代码
             }
         }
-        adapter.notifyDataSetChanged();
-        Toast.makeText(WebPictureActivity.this, "所有图片删除完毕", Toast.LENGTH_SHORT).show();
+
     }
+
+    /*
+    下载选中的图片到本地
+     */
 
     private void downloadImageToLocal() {
-        downloadImageList=new ArrayList<>();
-        for(int i = 0; i < imageBeanList.size(); i++) {
-          if(imageBeanList.get(i).ischecked()){
-            downloadImageList.add(imageBeanList.get(i));
-              downloadImage(i);
-          }
+        for (int i = 0; i < imageBeanList.size(); i++) {
+            if (imageBeanList.get(i).ischecked()) {
+                downloadImage(i);
+            }
         }
-
     }
 
-    private void downloadImage(int i) {
+    /*
+    用xutils下载图片
+     */
+
+    private void downloadImage(int position) {
         //如果路径不存在，则创建路径
-        File fileDir=new File(Constants.downloadPath);
-        if(fileDir.exists()){
+        File fileDir = new File(Constants.downloadPath);
+        if (fileDir.exists()) {
             fileDir.mkdirs();
         }
-        final String url=imageBeanList.get(i).getUrl();
-        RequestParams params=new RequestParams(url);
+        final String url = imageBeanList.get(position).getUrl();
+        RequestParams params = new RequestParams(url);
         params.setConnectTimeout(5000);
-        final String filePath=Constants.downloadPath+System.currentTimeMillis()+AppUtils.cutImagePath(url);
-        Log.e("TAG", "filePath"+ filePath);
+        final String filePath = Constants.downloadPath + System.currentTimeMillis() + AppUtils.cutImagePath(url);
+        Log.e("TAG", "filePath" + filePath);
         x.http().get(params, new MyCacheCallBack<File>() {//利用自定义的类，显式的回调以下方法
             @Override
             public boolean onCache(File result) {
@@ -697,11 +729,23 @@ public class WebPictureActivity extends Activity implements AdapterView.OnItemLo
         });
     }
 
+    /*
+    更新进度条
+     */
     private void updateDownImageProgress() {
         dialog.incrementProgressBy(1);
-        if(dialog.getProgress()==dialog.getMax()){
+        if (dialog.getProgress() == dialog.getMax()) {
             dialog.dismiss();
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if (!isEdit) {
+            super.onBackPressed();
+        } else {
+            initState();
+            setAllImagesState(false);
+        }
+    }
 }

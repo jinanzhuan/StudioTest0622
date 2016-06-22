@@ -26,7 +26,6 @@
 
         <ImageView
             android:onClick="download"
-            android:clickable="true"
             android:id="@+id/iv_picture_load"
             android:layout_width="30dp"
             android:layout_height="30dp"
