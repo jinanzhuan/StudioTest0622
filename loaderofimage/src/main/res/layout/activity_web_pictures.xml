@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/rl_picture_pre"
+        android:layout_width="match_parent"
+        android:layout_height="50dp">
+
+        <TextView
+            android:id="@+id/tv_picture_titile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="@dimen/generic_position_size"
+            android:layout_marginLeft="@dimen/generic_position_size"
+            android:layout_marginTop="@dimen/generic_position_size"
+            android:ellipsize="middle"
+            android:singleLine="true"
+            android:text="请点击下面网站,开始精彩之旅!"
+            android:textSize="@dimen/generic_word_size" />
+
+        <ProgressBar
+            android:id="@+id/pb_picture_bar"
+            style="@android:style/Widget.Holo.Light.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_picture_titile"
+            android:layout_margin="@dimen/generic_position_size"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/iv_picture_download"
+            android:layout_width="@dimen/generic_icon_size"
+            android:layout_height="@dimen/generic_icon_size"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="@dimen/generic_position_size"
+            android:layout_marginTop="@dimen/generic_position_size"
+            android:onClick="download"
+            android:src="@drawable/icon_s_download_press" />
+
+        <CheckBox
+            android:id="@+id/cb_picture_select"
+            style="@style/CustomCheckboxTheme"
+            android:layout_width="@dimen/generic_icon_size"
+            android:layout_height="@dimen/generic_icon_size"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="40dp"
+            android:layout_marginTop="@dimen/generic_position_size" />
+
+    </RelativeLayout>
+
+
+    <GridView
+        android:id="@+id/gv_picture_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/rl_picture_pre"
+        android:horizontalSpacing="@dimen/generic_position_size"
+        android:numColumns="3"
+        android:verticalSpacing="@dimen/generic_position_size"></GridView>
+
+
+    <Button
+        android:id="@+id/btn_picture_stopsearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="@dimen/generic_position_size"
+        android:layout_marginTop="50dp"
+        android:onClick="stopsearch"
+        android:text="停止抓取" />
+
+
+</RelativeLayout>

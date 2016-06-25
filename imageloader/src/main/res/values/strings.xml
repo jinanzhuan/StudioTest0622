@@ -1,5 +1,0 @@
-<resources>
-    <string name="app_name">抓图神器</string>
-    <string name="mainxml_name">请点击下面网站,开始精彩之旅!</string>
-    <string name="web_picture_hint">请在搜索框中输入网站网址</string>
-</resources>
