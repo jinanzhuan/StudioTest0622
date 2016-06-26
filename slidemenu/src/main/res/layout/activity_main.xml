@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.shuwei.slidemenu.SlideMenu xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/sm_main">
+
+    <include layout="@layout/item_menu" />
+
+    <include layout="@layout/item_content" />
+</com.example.shuwei.slidemenu.SlideMenu>
